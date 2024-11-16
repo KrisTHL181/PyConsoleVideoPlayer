@@ -56,7 +56,7 @@ def play_txt_files(txt_files, fps, sound):
 
         # 打印状态信息
         try:
-            real_fps = 1 / elapsed_time
+            real_fps = max(1 / elapsed_time, fps)
         except ZeroDivisionError:
             real_fps = fps
         remaining_time = estimated_finish_time - time.time()
