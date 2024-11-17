@@ -4,6 +4,7 @@ import time
 import argparse
 import ctypes
 import winsound
+import keyboard  # 引入keyboard库
 
 if os.name == "nt":
 
@@ -12,7 +13,6 @@ if os.name == "nt":
 
     def goto(y, x):
         console_handle = ctypes.windll.kernel32.GetStdHandle(-11)
-
         coord = COORD(x, y)
         ctypes.windll.kernel32.SetConsoleCursorPosition(console_handle, coord)
 
@@ -43,29 +43,61 @@ def play_txt_files(txt_files, fps, sound):
 
     winsound.PlaySound(sound, winsound.SND_FILENAME | winsound.SND_ASYNC)
 
-    for idx, txt_content in enumerate(txt_files, start=1):
-        start_time = time.time()
+    idx = 0
+    paused = False  # 添加暂停状态变量
 
-        sys.stdout.write(txt_content)
+    while idx < total_files:
+        if not paused:
+            txt_content = txt_files[idx]
+            start_time = time.time()
 
-        elapsed_time = time.time() - start_time
-        if elapsed_time < frame_duration:
-            time.sleep(frame_duration - elapsed_time)
-        else:
-            dropped_frames += 1
+            sys.stdout.write(txt_content)
 
-        # 打印状态信息
-        try:
-            real_fps = max(1 / elapsed_time, fps)
-        except ZeroDivisionError:
-            real_fps = fps
-        remaining_time = estimated_finish_time - time.time()
-        sys.stdout.write(
-            f"\n{idx}/{total_files} FPS: {real_fps:.2f} (预期FPS: {fps}) DROPS: {dropped_frames} 剩余时间: {remaining_time:.2f}s      "
-        )
+            elapsed_time = time.time() - start_time
+            if elapsed_time < frame_duration:
+                time.sleep(frame_duration - elapsed_time)
+            else:
+                dropped_frames += 1
 
-        # 移动光标到文本起始位置
-        goto(0, 0)
+            # 打印状态信息
+            try:
+                real_fps = max(1 / elapsed_time, fps)
+            except ZeroDivisionError:
+                real_fps = fps
+            remaining_time = estimated_finish_time - time.time()
+            sys.stderr.write(
+                f"\n{idx + 1}/{total_files} FPS: {real_fps:.2f} (预期FPS: {fps}) DROPS: {dropped_frames} 剩余时间: {remaining_time:.2f}s      "
+            )
+
+            # 移动光标到文本起始位置
+            goto(0, 0)
+
+        # 检测Left键
+        if keyboard.is_pressed('left'):
+            if idx > 0:
+                idx -= 1
+                continue
+            else:
+                idx = 0
+
+        # 检测Right键
+        if keyboard.is_pressed('right'):
+            if idx < total_files - 1:
+                idx += 3
+                continue
+            else:
+                idx = total_files - 1
+
+        # 检测空格键
+        if keyboard.is_pressed('space'):
+            paused = not paused  # 切换暂停状态
+            goto(0, 0)
+            sys.stderr.write("已暂停\r")
+            while keyboard.is_pressed('space'):  # 等待空格键释放
+                time.sleep(0.01)
+
+        if not paused:
+            idx += 1
 
 
 def main():

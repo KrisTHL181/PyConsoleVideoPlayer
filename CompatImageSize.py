@@ -41,7 +41,7 @@ def main():
     if not os.path.exists(args.output):
         os.makedirs(args.output)
 
-    console_size = (os.get_terminal_size().columns, os.get_terminal_size().lines-1) # -1为了打印信息
+    console_size = (os.get_terminal_size().columns, os.get_terminal_size().lines)
     print(f"控制台长宽: {console_size}")
 
     image_paths = [
