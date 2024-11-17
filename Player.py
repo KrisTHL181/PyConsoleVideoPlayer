@@ -5,6 +5,9 @@ import argparse
 import ctypes
 import winsound
 import keyboard  # 引入keyboard库
+import colorama
+
+colorama.just_fix_windows_console()
 
 if os.name == "nt":
 
@@ -22,16 +25,43 @@ else:
     def goto(y, x):
         curses.setsyx(y, x)
 
+colorama_colors = {
+    'A': colorama.Fore.BLACK,
+    'B': colorama.Fore.WHITE,
+    'C': colorama.Fore.LIGHTBLACK_EX,
+    'D': colorama.Fore.LIGHTBLACK_EX,
+    'E': colorama.Fore.RED,
+    'F': colorama.Fore.GREEN,
+    'G': colorama.Fore.BLUE,
+    'H': colorama.Fore.YELLOW,
+    'I': colorama.Fore.CYAN,
+    'J': colorama.Fore.MAGENTA,
+    'K': colorama.Fore.RED,
+    'L': colorama.Fore.GREEN,
+    'M': colorama.Fore.BLUE,
+    'N': colorama.Fore.YELLOW,
+    'O': colorama.Fore.CYAN,
+    'P': colorama.Fore.MAGENTA
+}
 
-def load_txt_files(directory):
+def load_txt_files(directory, color: bool = False):
     """加载指定目录下的所有txt文件的内容"""
     txt_files = []
+    if not color:
+        for filename in os.listdir(directory):
+            if filename.endswith(".txt"):
+                with open(os.path.join(directory, filename), "r", encoding="utf-8") as file:
+                    txt_files.append(f"{file.read()}\n")
+        return txt_files
+
     for filename in os.listdir(directory):
         if filename.endswith(".txt"):
             with open(os.path.join(directory, filename), "r", encoding="utf-8") as file:
-                txt_files.append(f"{file.read()}\n")
+                data = file.read()
+            for key, value in colorama_colors.items():
+                data = data.replace(key, value+"0")
+            txt_files.append(f"{data}{colorama.Style.RESET_ALL}\n")
     return txt_files
-
 
 def play_txt_files(txt_files, fps, sound):
     """按照指定的帧率逐行打印txt文件的内容"""
@@ -109,11 +139,12 @@ def main():
         "-f", "--fps", type=float, required=True, help="播放速度（帧率）"
     )
     parser.add_argument("-m", "--music", type=str, required=True, help="音乐文件路径")
+    parser.add_argument("-c", "--color", action='store_true', required=False, help="使用ASCII颜色")
 
     args = parser.parse_args()
     goto(0, 0)
     sys.stdout.write("加载文件中...\r")
-    txt_files = load_txt_files(args.dir)
+    txt_files = load_txt_files(args.dir, color=args.color)
     play_txt_files(txt_files, args.fps, args.music)
 
 
