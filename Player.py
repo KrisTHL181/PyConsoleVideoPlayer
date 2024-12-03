@@ -88,6 +88,7 @@ def play_txt_files(txt_files, fps, sound):
                 time.sleep(frame_duration - elapsed_time)
             else:
                 dropped_frames += 1
+                idx += 1
 
             # 打印状态信息
             try:

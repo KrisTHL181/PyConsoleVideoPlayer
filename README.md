@@ -34,7 +34,7 @@ Python控制台视频播放器。
 1. 使用 `ExtractVideo.py`从视频文件中提取所有帧。
 2. 使用 `CompatImageSize.py`将所有图像缩放到控制台大小。
 3. 使用 `ImagesToChar_ColorfulByASCII.py`将所有图像转换为具有颜色风格的字符并保存为文本文件。
-4. 使用 `Player.py`播放文本文件。
+4. 使用 `Player.py`播放文本文件。（记得带-c（--color）参数）
 
 ### 带灰度位色彩
 
