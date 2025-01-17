@@ -21,6 +21,8 @@ Python控制台视频播放器。
 
 ## 运行方法
 
+* 压缩所有文件：使用 `CompressFile.py` 对一个文件夹下所有.txt文件进行LZW压缩。
+
 ### 不带色彩
 
 1. 使用 `ExtractVideo.py`从视频文件中提取所有帧。
