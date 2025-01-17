@@ -62,7 +62,7 @@ def play_txt_files(txt_files: list[str], fps: int, sound: str):
     winsound.PlaySound(sound, winsound.SND_FILENAME | winsound.SND_ASYNC)
 
     idx = 0
-    paused = False  # 添加暂停状态变量
+    paused = False
 
     while idx < total_files:
         if not paused:
@@ -78,17 +78,12 @@ def play_txt_files(txt_files: list[str], fps: int, sound: str):
                 dropped_frames += 1
                 idx += 1
 
-            # 打印状态信息
-            real_fps = min(1 / max(elapsed_time, 1 / fps), fps)
-            remaining_time = estimated_finish_time - time.time()
             sys.stderr.write(
-                f"\n{idx + 1}/{total_files}({((idx+1)/total_files)*100:.2f}%) FPS: {real_fps:.2f} (预期FPS: {fps}) DROPS: {dropped_frames} 剩余时间: {remaining_time:.2f}s      "
+                f"\n{idx + 1}/{total_files}({((idx+1)/total_files)*100:.2f}%) FPS: {min(1 / max(elapsed_time, frame_duration), fps):.2f} (预期FPS: {fps}) DROPS: {dropped_frames} 剩余时间: {estimated_finish_time - time.time():.2f}s      "
             )
 
-            # 移动光标到文本起始位置
             goto(0, 0)
 
-        # 检测Left键
         if keyboard.is_pressed("left"):
             if idx > 0:
                 idx -= 1
@@ -96,7 +91,6 @@ def play_txt_files(txt_files: list[str], fps: int, sound: str):
             else:
                 idx = 0
 
-        # 检测Right键
         if keyboard.is_pressed("right"):
             if idx < total_files - 1:
                 idx += 3
@@ -104,12 +98,11 @@ def play_txt_files(txt_files: list[str], fps: int, sound: str):
             else:
                 idx = total_files - 1
 
-        # 检测空格键
         if keyboard.is_pressed("space"):
-            paused = not paused  # 切换暂停状态
+            paused = not paused
             goto(0, 0)
             sys.stderr.write("已暂停\r")
-            while keyboard.is_pressed("space"):  # 等待空格键释放
+            while keyboard.is_pressed("space"):
                 time.sleep(0.01)
 
         if not paused:
