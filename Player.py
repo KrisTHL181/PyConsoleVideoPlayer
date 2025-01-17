@@ -2,55 +2,42 @@ import os
 import sys
 import time
 import argparse
-import ctypes
+from PyScreenUtils.cursor_util import goto  # type: ignore
 import winsound
 import keyboard  # 引入keyboard库
 import colorama
 
 colorama.just_fix_windows_console()
 
-if os.name == "nt":
-
-    class COORD(ctypes.Structure):
-        _fields_ = [("X", ctypes.c_short), ("Y", ctypes.c_short)]
-
-    def goto(y, x):
-        console_handle = ctypes.windll.kernel32.GetStdHandle(-11)
-        coord = COORD(x, y)
-        ctypes.windll.kernel32.SetConsoleCursorPosition(console_handle, coord)
-
-else:
-    import curses
-
-    def goto(y, x):
-        curses.setsyx(y, x)
-
 colorama_colors = {
-    'A': colorama.Fore.BLACK,
-    'B': colorama.Fore.WHITE,
-    'C': colorama.Fore.LIGHTBLACK_EX,
-    'D': colorama.Fore.LIGHTBLACK_EX,
-    'E': colorama.Fore.RED,
-    'F': colorama.Fore.GREEN,
-    'G': colorama.Fore.BLUE,
-    'H': colorama.Fore.YELLOW,
-    'I': colorama.Fore.CYAN,
-    'J': colorama.Fore.MAGENTA,
-    'K': colorama.Fore.RED,
-    'L': colorama.Fore.GREEN,
-    'M': colorama.Fore.BLUE,
-    'N': colorama.Fore.YELLOW,
-    'O': colorama.Fore.CYAN,
-    'P': colorama.Fore.MAGENTA
+    "A": colorama.Fore.BLACK,
+    "B": colorama.Fore.WHITE,
+    "C": colorama.Fore.LIGHTBLACK_EX,
+    "D": colorama.Fore.LIGHTBLACK_EX,
+    "E": colorama.Fore.RED,
+    "F": colorama.Fore.GREEN,
+    "G": colorama.Fore.BLUE,
+    "H": colorama.Fore.YELLOW,
+    "I": colorama.Fore.CYAN,
+    "J": colorama.Fore.MAGENTA,
+    "K": colorama.Fore.RED,
+    "L": colorama.Fore.GREEN,
+    "M": colorama.Fore.BLUE,
+    "N": colorama.Fore.YELLOW,
+    "O": colorama.Fore.CYAN,
+    "P": colorama.Fore.MAGENTA,
 }
 
-def load_txt_files(directory, color: bool = False):
+
+def load_txt_files(directory: str, color: bool = False) -> list[str]:
     """加载指定目录下的所有txt文件的内容"""
-    txt_files = []
+    txt_files: list[str] = []
     if not color:
         for filename in os.listdir(directory):
             if filename.endswith(".txt"):
-                with open(os.path.join(directory, filename), "r", encoding="utf-8") as file:
+                with open(
+                    os.path.join(directory, filename), "r", encoding="utf-8"
+                ) as file:
                     txt_files.append(f"{file.read()}\n")
         return txt_files
 
@@ -59,11 +46,12 @@ def load_txt_files(directory, color: bool = False):
             with open(os.path.join(directory, filename), "r", encoding="utf-8") as file:
                 data = file.read()
             for key, value in colorama_colors.items():
-                data = data.replace(key, value+"0")
+                data = data.replace(key, value + "0")
             txt_files.append(f"{data}{colorama.Style.RESET_ALL}\n")
     return txt_files
 
-def play_txt_files(txt_files, fps, sound):
+
+def play_txt_files(txt_files: list[str], fps: int, sound: str):
     """按照指定的帧率逐行打印txt文件的内容"""
     frame_duration = 1 / fps
     total_files = len(txt_files)
@@ -91,20 +79,17 @@ def play_txt_files(txt_files, fps, sound):
                 idx += 1
 
             # 打印状态信息
-            try:
-                real_fps = max(1 / elapsed_time, fps)
-            except ZeroDivisionError:
-                real_fps = fps
+            real_fps = min(1 / max(elapsed_time, 1 / fps), fps)
             remaining_time = estimated_finish_time - time.time()
             sys.stderr.write(
-                f"\n{idx + 1}/{total_files} FPS: {real_fps:.2f} (预期FPS: {fps}) DROPS: {dropped_frames} 剩余时间: {remaining_time:.2f}s      "
+                f"\n{idx + 1}/{total_files}({((idx+1)/total_files)*100:.2f}%) FPS: {real_fps:.2f} (预期FPS: {fps}) DROPS: {dropped_frames} 剩余时间: {remaining_time:.2f}s      "
             )
 
             # 移动光标到文本起始位置
             goto(0, 0)
 
         # 检测Left键
-        if keyboard.is_pressed('left'):
+        if keyboard.is_pressed("left"):
             if idx > 0:
                 idx -= 1
                 continue
@@ -112,7 +97,7 @@ def play_txt_files(txt_files, fps, sound):
                 idx = 0
 
         # 检测Right键
-        if keyboard.is_pressed('right'):
+        if keyboard.is_pressed("right"):
             if idx < total_files - 1:
                 idx += 3
                 continue
@@ -120,11 +105,11 @@ def play_txt_files(txt_files, fps, sound):
                 idx = total_files - 1
 
         # 检测空格键
-        if keyboard.is_pressed('space'):
+        if keyboard.is_pressed("space"):
             paused = not paused  # 切换暂停状态
             goto(0, 0)
             sys.stderr.write("已暂停\r")
-            while keyboard.is_pressed('space'):  # 等待空格键释放
+            while keyboard.is_pressed("space"):  # 等待空格键释放
                 time.sleep(0.01)
 
         if not paused:
@@ -140,12 +125,15 @@ def main():
         "-f", "--fps", type=float, required=True, help="播放速度（帧率）"
     )
     parser.add_argument("-m", "--music", type=str, required=True, help="音乐文件路径")
-    parser.add_argument("-c", "--color", action='store_true', required=False, help="使用ASCII颜色")
+    parser.add_argument(
+        "-a", "--ascii", action="store_true", required=False, help="使用ASCII颜色"
+    )
 
     args = parser.parse_args()
     goto(0, 0)
     sys.stdout.write("加载文件中...\r")
-    txt_files = load_txt_files(args.dir, color=args.color)
+
+    txt_files = load_txt_files(args.dir, color=args.ascii)
     play_txt_files(txt_files, args.fps, args.music)
 
 

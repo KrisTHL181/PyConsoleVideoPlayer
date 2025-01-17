@@ -2,8 +2,8 @@ import os
 import argparse
 import numpy as np
 from PIL import Image
-from tqdm.contrib.concurrent import process_map
-import time
+from multiprocessing import Pool, cpu_count
+from tqdm import tqdm
 
 # 定义16种基本颜色
 COLORS = np.array(
@@ -41,15 +41,24 @@ def find_closest_color(pixel):
 def process_image(input_path):
     with Image.open(input_path) as img:
         img_array = np.array(img)
-        height, width, _ = img_array.shape
+        height, width = img_array.shape[0], img_array.shape[1]
 
-        img_array = img_array.reshape(-1, 3)  # 展平图像数组
-        closest_color_indices = find_closest_color(img_array)
+        closest_colors = np.zeros((height, width), dtype=np.uint8)
+
+        for y in range(height):
+            for x in range(width):
+                pixel = img_array[y, x]
+                closest_color_index = find_closest_color(pixel)
+                # 检查 closest_color_index 是否在 COLORS 数组中
+                if closest_color_index < len(COLORS):
+                    closest_colors[y, x] = closest_color_index
+                else:
+                    # 如果不在，选择一个默认值或者跳过这个像素
+                    closest_colors[y, x] = 0  # 示例：选择第
 
         binary_array = np.vectorize(lambda x: COLOR_TO_LETTER[tuple(COLORS[x])])(
-            closest_color_indices
+            closest_colors
         )
-        binary_array = binary_array.reshape(height, width)
 
     return "\n".join("".join(row) for row in binary_array.astype(str))
 
@@ -64,8 +73,6 @@ def process_file(file_info):
 
     with open(output_path, "w") as f:
         f.write(binary_data)
-
-    return filename  # 返回文件名用于进度条显示
 
 
 def main():
@@ -89,10 +96,9 @@ def main():
         if f.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".gif"))
     ]
 
-    # 使用 process_map 处理多进程任务，并显示进度条
-    return process_map(
-        process_file, file_infos, max_workers=os.cpu_count(), chunksize=128
-    )
+    with Pool(processes=cpu_count()) as pool:
+        for result in tqdm(pool.imap(process_file, file_infos), total=len(file_infos)):
+            pass
 
 
 if __name__ == "__main__":

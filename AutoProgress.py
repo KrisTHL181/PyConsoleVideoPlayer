@@ -19,7 +19,14 @@ def resize_images(input_directory, output_directory):
 
 def convert_images_to_text(input_directory, output_directory):
     subprocess.run(
-        ["python", "ImagesToChar.py", "-d", input_directory, "-o", output_directory]
+        [
+            "python",
+            "ImagesToChar_ColorfulByASCII.py",
+            "-d",
+            input_directory,
+            "-o",
+            output_directory,
+        ]
     )
 
 
@@ -36,7 +43,7 @@ def main():
     convert_images_to_text(images_directory, texts_directory)
 
     print(
-        "使用:\npython Player.py -d text_files -f <视频帧率|一般输入60> -m music.wav\n播放视频。"
+        "使用:\npython Player.py -d text_files -f <视频帧率|一般输入60> -m music.wav -a\n播放视频。"
     )
 
 
