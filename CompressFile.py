@@ -132,27 +132,30 @@ def main():
     if args.algorithm == "lzw":
         for filepath in tqdm(filelist):
             process_file_lzw(filepath, output_dir)
+            compression_ratios: list[float] = []
+            sample_size = min(args.sample, len(filelist))  # 默认抽10个样本
+            samples = random.sample(filelist, sample_size)
+
+            for sample in samples:
+                original_file_path = os.path.join(input_dir, sample)
+                compressed_file_path = os.path.join(
+                    output_dir, os.path.splitext(sample)[0] + ".txt"
+                )
+
+                original_size = os.path.getsize(original_file_path)
+                compressed_size = os.path.getsize(compressed_file_path)
+
+                compression_ratio = (
+                    (original_size - compressed_size) / original_size * 100
+                )
+                compression_ratios.append(compression_ratio)
+
+            print(
+                f"压缩率: {sum(compression_ratios) / len(compression_ratios) * 100:.3f}%"
+            )
     elif args.algorithm == "lzw_decompress":
         for filepath in tqdm(filelist):
             process_file_lzw_decompress(filepath, output_dir)
-
-    compression_ratios = []
-    sample_size = min(args.sample, len(filelist))  # 最多抽取10个样本
-    samples = random.sample(filelist, sample_size)
-
-    for sample in samples:
-        original_file_path = os.path.join(input_dir, sample)
-        compressed_file_path = os.path.join(
-            output_dir, os.path.splitext(sample)[0] + ".txt"
-        )
-
-        original_size = os.path.getsize(original_file_path)
-        compressed_size = os.path.getsize(compressed_file_path)
-
-        compression_ratio = (original_size - compressed_size) / original_size * 100
-        compression_ratios.append(compression_ratio)
-
-    print(f"压缩率: {sum(compression_ratios) / len(compression_ratios) * 100:.3f}%")
 
 
 if __name__ == "__main__":

@@ -6,8 +6,8 @@ from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
 
 
-def process_image(input_path):
-    pixel_array = []
+def process_image(input_path: str):
+    pixel_array: list[str] = []
     with Image.open(input_path) as img:
         img_array = np.array(img.convert("RGB"))
         height, width = img_array.shape[0], img_array.shape[1]
@@ -19,12 +19,11 @@ def process_image(input_path):
                     "{:02x}{:02x}{:02x}".format(pixel[0], pixel[1], pixel[2])
                 )
             pixel_array.append("\n")
-        pixel_array.append("\n")
 
     return "\n".join(pixel_array)
 
 
-def process_file(file_info):
+def process_file(file_info: tuple[str, str, str]):
     input_path, output_dir, filename = file_info
 
     output_filename = os.path.splitext(filename)[0] + ".txt"
@@ -60,7 +59,7 @@ def main():
     ]
 
     with Pool(processes=cpu_count()) as pool:
-        for result in tqdm(pool.imap(process_file, file_infos), total=len(file_infos)):
+        for _result in tqdm(pool.imap(process_file, file_infos), total=len(file_infos)):
             pass
 
 
